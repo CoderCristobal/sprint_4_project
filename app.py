@@ -2,94 +2,62 @@ import streamlit as st
 import pandas as pd
 import plotly_express as px
 
+#Loading DF
 df = pd.read_csv('vehicles_us.csv')
+
+#Changing 'date_posted' to datetime data type
+df['date_posted'] = pd.to_datetime(df['date_posted'])
+
+#Filling missing values in 'is_4wd' with 0 and changing to int data type
+df['is_4wd'] = df['is_4wd'].fillna(0).astype('int64')
+
+#Cleaning model column
+df['model'] = df['model'].str.replace('f150', 'f-150')
+df['model'] = df['model'].str.replace('f250', 'f-150')
+df['model'] = df['model'].str.replace('f350', 'f-350')
+df['model'] = df['model'].str.replace('sd', 'super duty')
+
+#Adding Manufacturer column from the frist word in Model string
 df['manufacturer'] = df['model'].apply(lambda x: x.split()[0])
 
-st.header('Data viewer')
+#Removing Manufacturer from Model
+df['model'] = df['model'].apply(lambda x: ' '.join(x.split()[1:]))
 
-filter_price = st.checkbox('Filter by Price')
-if filter_price:
-    start_price, end_price = st.select_slider(
-        'Select Price Range',
-        options=df['price'].sort_values().unique(),
-        value=(1, 10000))
-    df = df[(df['price'] >= start_price) & (df['price'] <= end_price)].sort_values(by='price')
-
-filter_model_year = st.checkbox('Filter by Model Year')
-if filter_model_year:
-    df = df.dropna(subset='model_year')
-    start_year, end_year = st.select_slider(
-        'Select Year Range',
-        options=df['model_year'].sort_values().unique(),
-        value=(1908, 2019))
-    df = df[(df['model_year'] >= start_year) & (df['model_year'] <= end_year)].sort_values(by='model_year')
-
-filter_condition = st.checkbox('Filter by Condition')
-if filter_condition:
-    selected_conditon = st.selectbox(
-        'Select Condition',
-        options=df['condition'].unique()
-    )
-    df = df[df['condition'] == selected_conditon]
-
-filter_cylinders = st.checkbox('Filter by Cylinders')
-df = df.dropna(subset='cylinders')
-if filter_cylinders:
-    start_cylinder, end_cylinder = st.select_slider(
-        'Select Cylinder Range',
-        options=df['cylinders'].sort_values().unique(),
-        value=(3, 4)
-    )
-    df = df[(df['cylinders'] >= start_cylinder) & (df['cylinders'] <= end_cylinder)]
-
-filter_fuel = st.checkbox('Filter by Fuel')
-if filter_fuel:
-    selected_fuel = st.selectbox(
-        'Select Fuel Type',
-        options=df['fuel'].unique())
-    df = df[df['fuel'] == selected_fuel]
-
-filter_odometer = st.checkbox('Filter by Odometer')
-if filter_odometer:
-    df = df.dropna(subset='odometer')
-    start_miles, end_miles = st.select_slider(
-        'Select Mile Range',
-        options=df['odometer'].sort_values().unique(),
-        value=(47000, 108000))
-    df = df[(df['odometer'] >= start_miles) & (df['odometer'] <= end_miles)]
-
-filter_transmition = st.checkbox('Filter by Transmission')
-if filter_transmition:
-    selected_transmition = st.selectbox(
-        'Select Transmission Type',
-        options=df['transmission'].unique()
-    )
-    df = df[df['transmission'] == selected_transmition]
-
-filter_color = st.checkbox('Filter by Color')
-if filter_color:
-    df = df.dropna(subset='paint_color')
-    selected_color = st.selectbox(
-        'Select a Color',
-        options=df['paint_color'].unique()
-    )
-    df = df[df['paint_color'] == selected_color]
-
-filter_4wd = st.checkbox('Filter by 4 Wheel Drive')
-if filter_4wd:
-    df['is_4wd'] = df['is_4wd'].fillna(0)
-    toggle_4wd = st.checkbox('Has 4 Wheel Drive')
-    if toggle_4wd:
-        df = df[df['is_4wd'] == 1]
-    else:
-        df = df[df['is_4wd'] == 0]
-    
-filter_manufacturer = st.checkbox('Filter by Manufacturer')
-if filter_manufacturer:
-    maker = st.selectbox(
-        'Select Manufacturer',
-        options=df['manufacturer'].unique())
-    df = df[df['manufacturer'] == maker]
-
-
+#Presenting DF
+st.header('Car Listing Viewer')
 st.dataframe(df)
+
+#Histogram
+st.write(px.histogram(df, x='odometer', color='condition'))
+
+
+st.write('Price by model and year')
+#Getting filter for scatterplot
+selected_model = st.selectbox(
+        'Select Model Type',
+        options=df['model'].unique()
+)
+
+selected_condition = st.selectbox(
+    'Select Condition',
+    options=df['condition'].unique()
+)
+
+filtered_models = df.loc[(df['model'] == selected_model) & (df['condition'] == selected_condition)]
+
+#Scatterplot
+
+st.write(px.scatter(filtered_models, x='model_year', y='price', title=f'Prices of {selected_model} in {selected_condition} condition'))
+
+#Making df for average price by model and year
+target_model = df.dropna()
+target_model = target_model[target_model['model'] == selected_model][target_model['condition'] == selected_condition]
+target_model = target_model.dropna(subset=['model_year'])
+target_model['model_year'] = target_model['model_year'].astype('int64')
+
+#Getting average
+avg_model_price = target_model.groupby('model_year')['price'].mean().reset_index(name='avg_price')
+
+#DF and Bargraph
+st.write(px.bar(avg_model_price, x='model_year', y='avg_price', title=f'Average price of {selected_model} in {selected_condition} condition by year'))
+st.write(avg_model_price)
