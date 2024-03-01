@@ -9,7 +9,7 @@ https://github.com/CoderCristobal/sprint_4_project
 
 
 ## Description
-The goal of this project is to showcase the Data Science skills I've learned using Python, Pandas, Jupyter Notebook to make an functional Web App. This Web App allows the user to view Car Advertisement data and not only be able to filter it, but view some statistics like average price by model and year. In this project I was able to learn more about Streamlit, and how it works with Pandas to make Data Frames visible and usable in a Web App
+The goal of this project is to showcase the Data Science skills I've learned using Python, Pandas, Jupyter Notebook to make an functional Web App. This Web App allows the user to view Car Advertisement data and not only be able to sort it, but view and filter some statistics like average price by model and year. In this project I was able to learn more about Streamlit, and how it works with Pandas to make Data Frames visible and usable in a Web App
 
 
 ## How to install
