@@ -13,7 +13,7 @@ df['is_4wd'] = df['is_4wd'].fillna(0).astype('int64')
 
 #Cleaning model column
 df['model'] = df['model'].str.replace('f150', 'f-150')
-df['model'] = df['model'].str.replace('f250', 'f-150')
+df['model'] = df['model'].str.replace('f250', 'f-250')
 df['model'] = df['model'].str.replace('f350', 'f-350')
 df['model'] = df['model'].str.replace('sd', 'super duty')
 
@@ -24,14 +24,22 @@ df['manufacturer'] = df['model'].apply(lambda x: x.split()[0])
 df['model'] = df['model'].apply(lambda x: ' '.join(x.split()[1:]))
 
 #Presenting DF
-st.header('Car Listing Viewer')
+st.title('Car Listing Viewer')
 st.dataframe(df)
 
+st.header('A graph of availability by odometer/price')
+
+#Checkbox for altering histogram
+is_price = st.checkbox('Availability by Price')
+if is_price:
+    x_hist_value = 'price'
+else:
+    x_hist_value = 'odometer'
+
 #Histogram
-st.write(px.histogram(df, x='odometer', color='condition'))
+st.write(px.histogram(df, x=x_hist_value, color='condition'))
 
-
-st.write('Price by model and year')
+st.header('Price checker by model and year')
 #Getting filter for scatterplot
 selected_model = st.selectbox(
         'Select Model Type',
